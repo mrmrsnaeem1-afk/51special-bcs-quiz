@@ -1,1 +1,587 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GENESIS BCS CARE · Oral Pathology Quiz</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:linear-gradient(145deg,#f5f7fc 0%,#e9edf5 100%);
+    font-family:'Segoe UI',Roboto,system-ui,-apple-system,sans-serif;
+    min-height:100vh;padding:2rem 1rem;display:flex;justify-content:center;align-items:flex-start;
+  }
+  .quiz-wrapper{
+    max-width:1000px;width:100%;background:rgba(255,255,255,.9);
+    border-radius:2.5rem;padding:2rem;box-shadow:0 25px 50px -12px rgba(0,20,40,.25);
+    border:1px solid rgba(255,255,255,.6);
+  }
+  .quiz-header{
+    display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;
+    margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:2px solid rgba(0,40,80,.08);
+  }
+  .quiz-title h1{font-size:1.6rem;font-weight:700;color:#0b1e33;line-height:1.2}
+  .quiz-title .sub{font-size:.85rem;color:#4a5f7a;font-weight:500;margin-top:.15rem}
+  .timer-box{
+    background:#0b1e33;color:#fff;padding:.55rem 1.3rem;border-radius:60px;
+    font-weight:600;font-size:1.25rem;display:flex;align-items:center;gap:.5rem;
+    box-shadow:0 6px 14px rgba(11,30,51,.25);white-space:nowrap;
+  }
+  .timer-box.warning{background:#b22234;animation:pulse-bg 1.2s infinite}
+  @keyframes pulse-bg{0%,100%{background:#b22234}50%{background:#8b1a1a}}
+  .screen{display:none}
+  .screen.active{display:block;animation:fadeSlide .35s ease}
+  @keyframes fadeSlide{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+  .card{background:#fff;border-radius:1.8rem;padding:1.6rem 1.8rem;margin-bottom:1.4rem;
+    box-shadow:0 4px 16px rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.03)}
+  .card h2{font-size:1.25rem;color:#0b1e33;margin-bottom:.35rem}
+  .hint{font-size:.88rem;color:#4a5f7a;line-height:1.5;margin-bottom:.9rem}
+  .start-row{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;margin-top:.5rem}
+  .start-row input{
+    flex:1;min-width:220px;padding:.75rem 1rem;border-radius:12px;border:1.5px solid #dbe4f0;
+    font-size:1rem;font-family:inherit;outline:none;background:#fbfdff;
+  }
+  .start-row input:focus{border-color:#1a6d9e;box-shadow:0 0 0 3px rgba(26,109,158,.12)}
+  .btn{
+    padding:.7rem 2.2rem;border:none;border-radius:60px;font-weight:700;font-size:1rem;
+    cursor:pointer;transition:.2s;background:#0b1e33;color:#fff;
+    box-shadow:0 6px 16px rgba(11,30,51,.20);font-family:inherit;
+  }
+  .btn:hover{transform:translateY(-2px);background:#112d4a}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .btn-secondary{background:#e5ebf5;color:#1d314a;box-shadow:none}
+  .btn-secondary:hover{background:#d3dceb}
+  .progress-meta{display:flex;justify-content:space-between;font-size:.9rem;font-weight:500;
+    color:#2c405a;margin-bottom:1.2rem;flex-wrap:wrap;gap:.5rem}
+  .progress-meta span{background:rgba(11,30,51,.06);padding:.3rem 1rem;border-radius:40px}
+  .progress-bar-track{width:100%;height:6px;background:#d9e0eb;border-radius:10px;margin-bottom:1.6rem;overflow:hidden}
+  .progress-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,#1a6d9e,#3a8fcb);transition:width .3s}
+  .question-card{background:#fff;border-radius:1.8rem;padding:1.6rem 1.8rem;margin-bottom:1.3rem;
+    box-shadow:0 4px 16px rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.03)}
+  .question-number{display:inline-block;font-size:.78rem;font-weight:700;color:#1a6d9e;
+    background:rgba(26,109,158,.10);padding:.2rem .9rem;border-radius:40px;margin-bottom:.65rem}
+  .question-text{font-size:1.06rem;font-weight:600;color:#0b1e33;line-height:1.5;margin-bottom:1.2rem}
+  .options{display:flex;flex-direction:column;gap:.55rem}
+  .option-label{display:flex;align-items:center;gap:.9rem;padding:.65rem 1.15rem;border-radius:12px;
+    background:#f8faff;border:1.5px solid #eef3fc;cursor:pointer;font-weight:500;color:#1d314a}
+  .option-label:hover{background:#edf4fe;border-color:#b6cfec}
+  .option-label input[type=radio]{appearance:none;-webkit-appearance:none;width:18px;height:18px;
+    border:2px solid #b8c9e0;border-radius:50%;flex-shrink:0;cursor:pointer}
+  .option-label input[type=radio]:checked{border-color:#1a6d9e;background:#1a6d9e;
+    box-shadow:inset 0 0 0 4px #fff,0 0 0 1px #1a6d9e}
+  .option-prefix{font-weight:700;color:#4a6a8a;min-width:1.3rem}
+  .submit-area{display:flex;justify-content:flex-end;margin-top:.6rem;gap:.8rem;flex-wrap:wrap}
+  .result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.9rem;margin:1.2rem 0 1.4rem}
+  .result-stat{background:#f5f9ff;padding:.9rem .7rem;border-radius:1.2rem;text-align:center}
+  .result-stat .number{font-size:1.9rem;font-weight:800;color:#0b1e33;line-height:1.2}
+  .result-stat .label{font-size:.72rem;color:#4a5f7a;font-weight:600;text-transform:uppercase}
+  .result-stat.highlight .number{color:#1a6d9e}
+  .result-stat.wrong .number{color:#b22234}
+  .result-stat.neutral .number{color:#7a8aa0}
+  .review-item{padding:.85rem .5rem;border-bottom:1px solid #f0f4fb;font-size:.93rem;
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem .7rem}
+  .review-item .qnum{font-weight:700;color:#4a6a8a;min-width:2.7rem;font-size:.88rem}
+  .review-item .status{font-weight:600;padding:.12rem .75rem;border-radius:30px;font-size:.68rem;
+    text-transform:uppercase;white-space:nowrap}
+  .status.correct{background:#d4edda;color:#0b6e3b}
+  .status.wrong{background:#f8d7da;color:#a11f2a}
+  .status.skipped{background:#e9ecef;color:#5a6a7a}
+  .review-item .answer-detail{color:#2c405a;font-weight:500;flex:1;min-width:190px}
+  .review-item .answer-detail .user-ans{font-weight:400;color:#4a5f7a}
+  .review-item .explanation{width:100%;margin-top:.35rem;padding:.55rem .85rem;background:#f6faff;
+    border-left:3px solid #1a6d9e;border-radius:0 8px 8px 0;font-size:.86rem;color:#2c405a;line-height:1.5}
+  .review-item .explanation strong{color:#0b1e33}
+  @media(max-width:700px){
+    .quiz-wrapper{padding:1.2rem}
+    .quiz-title h1{font-size:1.25rem}
+    .timer-box{font-size:1rem;padding:.4rem 1rem}
+    .question-card,.card{padding:1.2rem}
+    .question-text{font-size:.98rem}
+    .option-label{padding:.5rem .9rem;font-size:.93rem}
+    .btn{padding:.6rem 1.6rem;font-size:.93rem}
+    .submit-area .btn{width:100%}
+    .result-grid{grid-template-columns:repeat(2,1fr)}
+    .review-item{flex-direction:column;align-items:flex-start}
+  }
+</style>
+</head>
+<body>
+<div class="quiz-wrapper">
+
+  <!-- HEADER -->
+  <div class="quiz-header">
+    <div class="quiz-title">
+      <h1>🦷 GENESIS BCS CARE</h1>
+      <div class="sub">Oral Pathology · Online 51<sup>st</sup> Special BCS Dental Batch · 2026</div>
+    </div>
+    <div class="timer-box" id="timerBox" style="display:none">
+      <span>⏱</span><span id="timerDisplay">25:00</span>
+    </div>
+  </div>
+
+  <!-- START SCREEN -->
+  <section id="startScreen" class="screen active">
+    <div class="card">
+      <h2>📝 Oral Pathology Exam</h2>
+      <p class="hint">
+        30 questions · 25 minutes · <strong>+1 correct / −0.5 wrong</strong> · skipped = 0<br>
+        Enter your name, then click <strong>Start Exam</strong>.
+      </p>
+      <div class="start-row">
+        <input id="nameInput" placeholder="Enter your name…" maxlength="30" autocomplete="off">
+        <button class="btn" id="startBtn">▶ Start Exam</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIZ SCREEN -->
+  <section id="quizScreen" class="screen">
+    <div class="card" style="padding:1rem 1.4rem;margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;align-items:center">
+        <span style="font-weight:700;color:#0b1e33">Examinee: <span id="quizName"></span></span>
+      </div>
+    </div>
+    <div class="progress-meta">
+      <span id="progressText">Question 1 of 30</span>
+      <span id="answeredCount">Answered: 0</span>
+    </div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div id="questionsContainer"></div>
+    <div class="submit-area">
+      <button class="btn" id="submitBtn">✔ Submit Exam</button>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section id="resultScreen" class="screen"></section>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   ORAL PATHOLOGY QUESTION BANK — 30 Questions
+   Source key: ক=a, খ=b, গ=c, ঘ=d
+   ═══════════════════════════════════════════════════════════ */
+const questions = [
+  {
+    text: "Tennis racket appearance on radiology seen in case of -",
+    options: ["Odontoma", "Myxofibroma", "Pindborg tumour", "Odontogenic botryoid cyst"],
+    correct: 1,
+    explanation: "Tennis racket appearance is a radiological feature of odontogenic myxoma (myxofibroma in the options)."
+  },
+  {
+    text: "In anaphylaxis, which medication is the life-saving one?",
+    options: ["Adrenaline", "Hydrocortisone", "Suxamethonium", "Chlorpheniramine"],
+    correct: 0,
+    explanation: "Epinephrine or adrenaline is the mainstay of management for acute anaphylaxis."
+  },
+  {
+    text: "Commonest cause of loss of consciousness in a dental chamber is syncope. Main mechanism behind this -",
+    options: ["Cerebral vascular dilatation", "Generalized hypoxia", "Cerebral ischemia", "Postural hypotension"],
+    correct: 2,
+    explanation: "Transient loss of consciousness in syncope is due to cerebral ischemia."
+  },
+  {
+    text: "Gingival swelling and bleeding, mobility, periodontal bone loss may be caused by deficiency of -",
+    options: ["Vitamin K", "Vitamin C", "Folic acid", "Iron"],
+    correct: 1,
+    explanation: "Scurvy is caused by Vitamin C deficiency and presents with gingival swelling, bleeding, mobility and bone loss."
+  },
+  {
+    text: "Which of the following teeth is most frequently missing in hypodontia?",
+    options: ["Maxillary canine", "Third molar", "Mandibular first premolar", "Maxillary central incisor"],
+    correct: 1,
+    explanation: "The third molar is the most frequently missing tooth in hypodontia."
+  },
+  {
+    text: "In which type of Amelogenesis Imperfecta is the enamel hard but pitted, grooved, and very thin?",
+    options: ["Hypoplastic", "Hypomaturation", "Hypocalcification", "Regional odontodysplasia"],
+    correct: 0,
+    explanation: "Hypoplastic amelogenesis imperfecta shows hard but thin, pitted or grooved enamel."
+  },
+  {
+    text: "Which radiographic feature is classic for Dentinogenesis Imperfecta?",
+    options: ["Excessively long, thick roots", "Sun-ray appearance of the jaw bone", "Teeth floating in the air", "Obliterated pulp chambers and stunted roots"],
+    correct: 3,
+    explanation: "Obliterated pulp chambers and stunted roots are classical radiological findings in dentinogenesis imperfecta."
+  },
+  {
+    text: "What condition is notoriously known as the cause of 'rootless teeth'?",
+    options: ["Amelogenesis imperfecta", "Dentinal dysplasia", "Regional odontodysplasia", "Fluorosis"],
+    correct: 1,
+    explanation: "Dentinal dysplasia may cause no root formation — 'rootless teeth'."
+  },
+  {
+    text: "The most common tooth for Dens invaginatus to occur is the:",
+    options: ["Maxillary lateral incisor", "Mandibular premolar", "Maxillary incisor", "Upper second molar"],
+    correct: 0,
+    explanation: "Dens invaginatus most commonly affects the maxillary lateral incisor."
+  },
+  {
+    text: "What is the time required for dental plaque to become visible on a tooth surface?",
+    options: ["20 minutes", "1 to 2 hours", "12 to 24 hours", "3 days"],
+    correct: 2,
+    explanation: "Plaque becomes visible 12 to 24 hours after tooth brushing."
+  },
+  {
+    text: "Which of the following sugars is considered the least cariogenic?",
+    options: ["Xylitol", "Sorbitol", "Sucrose", "Lactose"],
+    correct: 3,
+    explanation: "Sucrose is the most cariogenic. As per the provided answer key, lactose is marked as the least cariogenic among the listed options."
+  },
+  {
+    text: "Chronic hyperplastic pulpitis (pulp polyp) is clinically characterized as:",
+    options: ["A highly painful, pale ulcer", "A painless, dusky red or pinkish soft nodule protruding into a cavity", "A hard, bony outgrowth from the root surface", "A dark brown patch on the gingiva"],
+    correct: 1,
+    explanation: "Pulp polyp presents as a painless, dusky red or pinkish soft nodule protruding into a cavity due to chronic irritation."
+  },
+  {
+    text: "What term describes a type of hypercementosis that causes the fusion of roots of adjacent teeth?",
+    options: ["Gemination", "Concrescence", "Dilaceration", "Taurodontism"],
+    correct: 1,
+    explanation: "Concrescence is the fusion of adjacent teeth by cementum."
+  },
+  {
+    text: "Which of the following bacteria associated with chronic periodontitis is classified as a facultative anaerobe?",
+    options: ["Porphyromonas gingivalis", "Fusobacterium nucleatum", "Tannerella forsythia", "Eikenella corrodens"],
+    correct: 3,
+    explanation: "Eikenella corrodens is a facultative anaerobe associated with chronic periodontitis. A. actinomycetemcomitans is also noted."
+  },
+  {
+    text: "McCune-Albright syndrome comprises skin pigmentation (Café-au-lait spots), endocrine abnormalities, and which bone disease?",
+    options: ["Fibrous dysplasia", "Paget's disease", "Osteosarcoma", "Multiple myeloma"],
+    correct: 0,
+    explanation: "McCune-Albright syndrome includes polyostotic fibrous dysplasia, café-au-lait spots and endocrine abnormalities."
+  },
+  {
+    text: "What is the mean age of onset for osteosarcoma of the jaws?",
+    options: ["10 years old", "35 years old", "65 years old", "75 years old"],
+    correct: 1,
+    explanation: "Osteosarcoma of the jaw bone occurs mostly in middle age, with a mean age around 35 years."
+  },
+  {
+    text: "A 'jigsaw puzzle' or 'mosaic' histological pattern of bone is a key diagnostic feature of:",
+    options: ["Thalassemia", "Diffuse sclerosing osteomyelitis", "Paget's disease", "Multiple myeloma"],
+    correct: 2,
+    explanation: "Paget's disease shows a jigsaw/mosaic pattern of bone histologically and cotton-wool appearance radiographically."
+  },
+  {
+    text: "A 'ground glass' or 'orange peel' radiographic appearance accompanied by a 'Chinese letter' pattern on histopathology indicates:",
+    options: ["Paget's disease", "Diffuse sclerosing osteomyelitis", "Osteogenesis imperfecta", "Fibrous dysplasia"],
+    correct: 3,
+    explanation: "Ground-glass/orange-peel radiology and Chinese-letter histopathology are characteristic of fibrous dysplasia."
+  },
+  {
+    text: "Which autoantibody target is associated with Pemphigus vulgaris?",
+    options: ["Collagen 7", "BP230", "Desmoglein 3", "BP180"],
+    correct: 2,
+    explanation: "Desmoglein 3 is a component of desmosomes and is the target autoantibody in pemphigus vulgaris."
+  },
+  {
+    text: "Glossitis associated with Vitamin B12 deficiency is traditionally described as:",
+    options: ["Beefy tongue", "Geographic tongue", "Black hairy tongue", "Strawberry tongue"],
+    correct: 0,
+    explanation: "Beefy tongue is seen in macrocytic anemia due to Vitamin B12 deficiency."
+  },
+  {
+    text: "Patients with Sjögren's syndrome have a significantly increased risk of developing which malignancy?",
+    options: ["Mucoepidermoid carcinoma", "Adenoid cystic carcinoma", "Squamous cell carcinoma", "Lymphoma"],
+    correct: 3,
+    explanation: "Lymphoma may develop in patients with Sjögren's syndrome."
+  },
+  {
+    text: "Primary Sjögren's syndrome comprises:",
+    options: ["Dry mouth and dry eyes associated with Rheumatoid Arthritis", "Dry mouth and dry eyes not associated with connective tissue disease", "Excess salivation and tearing due to heavy smoking", "Painful enlargement of the parotid gland due to viral infection"],
+    correct: 1,
+    explanation: "Primary Sjögren's syndrome (sicca syndrome) is dry mouth and dry eyes not associated with connective tissue disease."
+  },
+  {
+    text: "What is the gold standard imaging modality for investigating suspected salivary gland neoplasms?",
+    options: ["Magnetic Resonance Imaging (MRI)", "Sialography", "Cone beam CT", "Orthopantomogram (OPG)"],
+    correct: 0,
+    explanation: "MRI is the gold standard for soft tissue lesions such as salivary gland neoplasms."
+  },
+  {
+    text: "What is the most common malignant salivary gland tumor overall?",
+    options: ["Pleomorphic adenoma", "Adenoid cystic carcinoma", "Mucoepidermoid carcinoma", "Acinic cell carcinoma"],
+    correct: 2,
+    explanation: "Mucoepidermoid carcinoma is the most common malignant salivary gland tumor."
+  },
+  {
+    text: "Which salivary gland malignancy is notorious for early pain due to its strong tendency for perineural invasion?",
+    options: ["Pleomorphic adenoma", "Warthin's tumor", "Low-grade mucoepidermoid carcinoma", "Adenoid cystic carcinoma"],
+    correct: 3,
+    explanation: "Adenoid cystic carcinoma is associated with perineural invasion and early pain."
+  },
+  {
+    text: "Untreated Pemphigus vulgaris typically results in death due to:",
+    options: ["Ocular scarring and blindness", "Widespread skin involvement", "Perineural malignancy transformation", "Severe esophageal strictures"],
+    correct: 1,
+    explanation: "Widespread skin involvement is fatal in untreated pemphigus vulgaris."
+  },
+  {
+    text: "Surgical management of a hard palate Pleomorphic Adenoma requires:",
+    options: ["Superficial parotidectomy", "Tumor enucleation only", "Radical maxillectomy with chemotherapy", "Excision with 1 cm margin including periosteum"],
+    correct: 3,
+    explanation: "Excision with a 1 cm margin including periosteum and overlying mucosa is required."
+  },
+  {
+    text: "Which drug reduces relapses in severe C. difficile pseudomembranous colitis?",
+    options: ["Clindamycin", "Lincomycin", "Fidaxomicin", "Vancomycin"],
+    correct: 2,
+    explanation: "Fidaxomicin is a newer alternative to metronidazole and reduces relapses."
+  },
+  {
+    text: "An asymptomatic root tip displaced into the antrum with zero mucosal reaction should be managed by:",
+    options: ["Avoiding immediate digging; monitoring infection risks", "Urgent Caldwell-Luc emergency surgery", "Immediate socket digging and exploration", "Immediate deep mental nerve block anesthesia"],
+    correct: 0,
+    explanation: "Immediate digging can cause trauma to the antral lining; avoid immediate digging and monitor."
+  },
+  {
+    text: "Which cell contributes to forming cholesterol crystals within the lumen of a radicular cyst?",
+    options: ["Epithelial cell of Malassez", "Rest of Serres", "Erythrocyte", "Macrophage"],
+    correct: 2,
+    explanation: "RBCs breakdown into the lumen and release cholesterol from their cell membrane."
+  }
+];
+
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTS & STATE
+   ═══════════════════════════════════════════════════════════ */
+const TOTAL = questions.length;
+const NEGATIVE_MARK = 0.5;
+const QUIZ_DURATION = 25 * 60;
+
+let examineeName = '';
+let answers = new Array(TOTAL).fill(null);
+let timer = QUIZ_DURATION;
+let timerInterval = null;
+let isSubmitted = false;
+
+/* DOM */
+const startScreen = document.getElementById('startScreen');
+const quizScreen = document.getElementById('quizScreen');
+const resultScreen = document.getElementById('resultScreen');
+const nameInput = document.getElementById('nameInput');
+const startBtn = document.getElementById('startBtn');
+const timerBox = document.getElementById('timerBox');
+const timerDisplay = document.getElementById('timerDisplay');
+const quizName = document.getElementById('quizName');
+const progressText = document.getElementById('progressText');
+const answeredCount = document.getElementById('answeredCount');
+const progressFill = document.getElementById('progressFill');
+const questionsContainer = document.getElementById('questionsContainer');
+const submitBtn = document.getElementById('submitBtn');
+
+/* ═══════════════════════════════════════════════════════════
+   START EXAM
+   ═══════════════════════════════════════════════════════════ */
+startBtn.addEventListener('click', () => {
+  examineeName = nameInput.value.trim() || 'Examinee';
+  quizName.textContent = examineeName;
+  startScreen.classList.remove('active');
+  quizScreen.classList.add('active');
+  timerBox.style.display = 'flex';
+  renderQuestions();
+  updateTimerDisplay();
+  updateProgress();
+  startTimer();
+});
+
+nameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') startBtn.click();
+});
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER QUESTIONS
+   ═══════════════════════════════════════════════════════════ */
+function renderQuestions() {
+  const letters = ['a)', 'b)', 'c)', 'd)'];
+  questionsContainer.innerHTML = questions.map((q, idx) => `
+    <div class="question-card">
+      <div class="question-number">Question ${idx + 1} of ${TOTAL}</div>
+      <div class="question-text">${escapeHtml(q.text)}</div>
+      <div class="options">
+        ${q.options.map((opt, oi) => `
+          <label class="option-label">
+            <input type="radio" name="q${idx}" value="${oi}"
+              ${answers[idx] === oi ? 'checked' : ''}
+              data-qidx="${idx}" data-oidx="${oi}">
+            <span class="option-prefix">${letters[oi]}</span>
+            ${escapeHtml(opt)}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  questionsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', function () {
+      if (isSubmitted) { this.checked = false; return; }
+      answers[+this.dataset.qidx] = +this.dataset.oidx;
+      updateProgress();
+    });
+  });
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => (
+    { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]
+  ));
+}
+
+function updateProgress() {
+  const answered = answers.filter(a => a !== null).length;
+  progressFill.style.width = (answered / TOTAL) * 100 + '%';
+  answeredCount.textContent = `Answered: ${answered}`;
+  const next = answers.findIndex(a => a === null);
+  progressText.textContent = `Question ${(next === -1 ? TOTAL : next + 1)} of ${TOTAL}`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TIMER
+   ═══════════════════════════════════════════════════════════ */
+function startTimer() {
+  stopTimer();
+  timerInterval = setInterval(() => {
+    timer--;
+    if (timer < 0) timer = 0;
+    updateTimerDisplay();
+    if (timer <= 0) {
+      stopTimer();
+      submitExam(true);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timer / 60);
+  const s = timer % 60;
+  timerDisplay.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  timerBox.classList.toggle('warning', timer <= 60);
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SUBMIT
+   ═══════════════════════════════════════════════════════════ */
+submitBtn.addEventListener('click', () => {
+  if (isSubmitted) return;
+  const answered = answers.filter(a => a !== null).length;
+  const msg = answered < TOTAL
+    ? `You have answered ${answered} out of ${TOTAL}. Submit anyway?`
+    : 'Submit your exam?';
+  if (!confirm(msg)) return;
+  submitExam(false);
+});
+
+function submitExam(auto) {
+  if (isSubmitted) return;
+  isSubmitted = true;
+  stopTimer();
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = '⏳ Submitting…';
+  questionsContainer.querySelectorAll('input[type="radio"]').forEach(r => r.disabled = true);
+
+  let correct = 0, wrong = 0, skipped = 0;
+  const details = [];
+
+  questions.forEach((q, idx) => {
+    const ua = answers[idx];
+    let status;
+    if (ua === null) { skipped++; status = 'skipped'; }
+    else if (ua === q.correct) { correct++; status = 'correct'; }
+    else { wrong++; status = 'wrong'; }
+    details.push({ idx, userAns: ua, correct: q.correct, status });
+  });
+
+  const rawScore = correct - wrong * NEGATIVE_MARK;
+  const finalScore = Math.max(0, rawScore);
+  const accuracy = +((correct / TOTAL) * 100).toFixed(1);
+
+  showResults({
+    correct, wrong, skipped,
+    score: +finalScore.toFixed(2),
+    accuracy,
+    details,
+    auto
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESULT SCREEN
+   ═══════════════════════════════════════════════════════════ */
+function showResults(r) {
+  quizScreen.classList.remove('active');
+  resultScreen.classList.add('active');
+  timerBox.style.display = 'none';
+
+  const letters = ['a)', 'b)', 'c)', 'd)'];
+
+  const reviewHtml = r.details.map(d => {
+    const q = questions[d.idx];
+    const userText = d.userAns !== null
+      ? letters[d.userAns] + ' ' + escapeHtml(q.options[d.userAns])
+      : '— (skipped)';
+    const correctText = letters[d.correct] + ' ' + escapeHtml(q.options[d.correct]);
+    const statusLabel =
+      d.status === 'correct' ? '<span class="status correct">Correct</span>' :
+      d.status === 'wrong'   ? '<span class="status wrong">Wrong</span>' :
+                               '<span class="status skipped">Skipped</span>';
+
+    return `
+      <div class="review-item">
+        <span class="qnum">Q${d.idx + 1}</span>
+        ${statusLabel}
+        <span class="answer-detail">
+          ${d.status === 'correct' ? '✅' : '❌'}
+          Your answer: <span class="user-ans">${userText}</span>
+          &nbsp;·&nbsp; Correct answer: <strong>${correctText}</strong>
+        </span>
+        <div class="explanation"><strong>Explanation:</strong> ${q.explanation}</div>
+      </div>`;
+  }).join('');
+
+  resultScreen.innerHTML = `
+    <div class="card">
+      <h2>📊 ${escapeHtml(examineeName)} — Result</h2>
+      <p class="hint">
+        Marking: +1 correct · −${NEGATIVE_MARK} wrong · skipped = 0 · final score floored at 0
+        ${r.auto ? '<br><strong style="color:#b22234">⏰ Time expired — auto-submitted.</strong>' : ''}
+      </p>
+
+      <div class="result-grid">
+        <div class="result-stat highlight"><div class="number">${r.correct}</div><div class="label">✅ Correct</div></div>
+        <div class="result-stat wrong"><div class="number">${r.wrong}</div><div class="label">❌ Wrong (−${NEGATIVE_MARK})</div></div>
+        <div class="result-stat neutral"><div class="number">${r.skipped}</div><div class="label">⏭ Skipped</div></div>
+        <div class="result-stat highlight" style="background:#e2edfb">
+          <div class="number">${r.score} / ${TOTAL}</div><div class="label">⭐ Final Score</div>
+        </div>
+        <div class="result-stat" style="grid-column:span 2;background:#eef4fc">
+          <div class="number">${r.accuracy}%</div><div class="label">Accuracy</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1.2rem">
+        <button class="btn btn-secondary" onclick="location.reload()">🔄 Restart Quiz</button>
+        <button class="btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆ Back to Top</button>
+      </div>
+
+      <h3 style="font-size:1.1rem;color:#0b1e33;margin-bottom:.6rem;">📋 Answer Review &amp; Explanations</h3>
+      ${reviewHtml}
+    </div>
+  `;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
